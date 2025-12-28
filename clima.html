@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador Clima API - JacLab DAW</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: system-ui, sans-serif; 
+            background: linear-gradient(135deg, #0a1a0a, #1a2a1a); 
+            color: #e0ffe0; 
+            min-height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 20px;
+        }
+        .container { 
+            background: rgba(0,20,10,0.9); 
+            border: 1px solid #0f3; 
+            border-radius: 20px; 
+            padding: 40px; 
+            max-width: 500px; 
+            width: 100%; 
+            text-align: center; 
+            backdrop-filter: blur(10px);
+        }
+        input { 
+            width: 100%; 
+            padding: 16px; 
+            background: rgba(0,255,0,0.1); 
+            border: 2px solid #0f3; 
+            border-radius: 12px; 
+            color: #e0ffe0; 
+            font-size: 18px; 
+            margin-bottom: 20px;
+        }
+        .clima-info { 
+            background: rgba(0,255,0,0.05); 
+            border-radius: 12px; 
+            padding: 24px; 
+            margin-top: 20px; 
+            display: none;
+        }
+        .temp { font-size: 48px; font-weight: bold; color: #0f3; margin: 10px 0; }
+        .loading { color: #0f3; font-size: 18px; }
+        @media (max-width: 600px) { .container { padding: 24px; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌤️ Buscador Clima API</h1>
+        <p>Escribe ciudad (ej: "A Coruña")</p>
+        <input type="text" id="ciudadInput" placeholder="A Coruña, Madrid..." value="A Coruña">
+        <button onclick="buscarClima()">🔍 Buscar</button>
+        <div id="loading" class="loading" style="display:none;">Cargando...</div>
+        <div id="climaInfo" class="clima-info"></div>
+        <p><small>Proyecto DAW • OpenWeatherMap API • Fetch</small></p>
+    </div>
+
+    <script>
+        const API_KEY = 'b1b15e880fb791225300a08ddbe06d1f'; // Gratis OpenWeatherMap
+        const ciudadInput = document.getElementById('ciudadInput');
+        const climaInfo = document.getElementById('climaInfo');
+        const loading = document.getElementById('loading');
+
+        async function buscarClima() {
+            const ciudad = ciudadInput.value.trim();
+            if (!ciudad) return;
+
+            loading.style.display = 'block';
+            climaInfo.style.display = 'none';
+
+            try {
+                const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${ciudad}&appid=${API_KEY}&units=metric&lang=es`);
+                const data = await res.json();
+                
+                climaInfo.innerHTML = `
+                    <h2>${data.name}</h2>
+                    <div class="temp">${Math.round(data.main.temp)}°C</div>
+                    <p>${data.weather[0].description}</p>
+                    <p>💧 Humedad: ${data.main.humidity}%</p>
+                    <p>💨 Viento: ${data.wind.speed} m/s</p>
+                `;
+                climaInfo.style.display = 'block';
+            } catch (error) {
+                climaInfo.innerHTML = '<p>❌ Ciudad no encontrada</p>';
+                climaInfo.style.display = 'block';
+            }
+            loading.style.display = 'none';
+        }
+
+        // Enter busca clima
+        ciudadInput.addEventListener('keypress', e => e.key === 'Enter' && buscarClima());
+        buscarClima(); // Carga A Coruña automática
+    </script>
+</body>
+</html>
