@@ -72,30 +72,45 @@
         const ciudadInput = document.getElementById('ciudadInput');
         const climaInfo = document.getElementById('climaInfo');
 
-        function buscarClima() {
-            const ciudad = ciudadInput.value.trim().toLowerCase();
-            climaInfo.style.display = 'none';
-            
-            // Buscar ciudad (case insensitive)
-            const ciudadKey = Object.keys(ciudadesData).find(key => 
-                key.toLowerCase().includes(ciudad) || ciudad.includes(key.toLowerCase())
-            );
-            
-            if (ciudadKey && ciudadesData[ciudadKey]) {
-                const data = ciudadesData[ciudadKey];
-                climaInfo.innerHTML = `
-                    <h2>${ciudadKey}</h2>
-                    <div class="icon">${data.icon}</div>
-                    <div class="temp">${data.temp}°C</div>
-                    <p>${data.descripcion}</p>
-                    <p>💧 ${data.humedad}% humedad</p>
-                    <p>💨 ${data.viento} km/h viento</p>
-                `;
-            } else {
-                climaInfo.innerHTML = '<h3>❌ Ciudad no encontrada</h3><p>Prueba: A Coruña, Madrid, Barcelona...</p>';
-            }
-            climaInfo.style.display = 'block';
-        }
+        async function buscarClima() {
+    const ciudad = ciudadInput.value.trim().replace(' ', '+');
+    climaInfo.style.display = 'none';
+    climaInfo.innerHTML = '<p>🔄 Cargando...</p>';
+    climaInfo.style.display = 'block';
+    
+    try {
+        const response = await fetch(`https://wttr.in/${ciudad}?format=j1`);
+        const data = await response.json();
+        
+        const temp = data.current_condition[0].temp_C;
+        const feels = data.current_condition[0].FeelsLikeC;
+        const desc = data.current_condition[0].weatherDesc[0].value;
+        const humidity = data.current_condition[0].humidity;
+        const viento = data.current_condition[0].windspeedKmph;
+        const icon = getWeatherIcon(temp, desc);
+        
+        climaInfo.innerHTML = `
+            <h2>${ciudadInput.value}</h2>
+            <div class="icon">${icon}</div>
+            <div class="temp">${temp}°C</div>
+            <p>${desc}</p>
+            <p>💧 ${humidity}% humedad</p>
+            <p>💨 ${viento} km/h viento</p>
+            <p>Sensación: ${feels}°C</p>
+        `;
+    } catch (error) {
+        climaInfo.innerHTML = '<h3>❌ Error conexión</h3><p>Revisa ciudad o conexión</p>';
+    }
+}
+
+// Iconos dinámicos por temperatura
+function getWeatherIcon(temp, desc) {
+    if (temp > 25) return '☀️';
+    if (temp > 15) return '⛅';
+    if (desc.includes('lluvia')) return '🌧️';
+    return '☁️';
+}
+
 
         // Enter para buscar
         ciudadInput.addEventListener('keypress', e => e.key === 'Enter' && buscarClima());
